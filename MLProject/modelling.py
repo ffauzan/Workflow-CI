@@ -26,7 +26,7 @@ token = os.getenv("DAGSHUB_USER_TOKEN")
 dagshub.auth.add_app_token(token)
 
 mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
-mlflow.set_experiment("Crop Model")
+mlflow.set_experiment("Crop Model v2")
 
 # Load the dataset
 df_cleaned = pd.read_csv('crop_data_cleaned.csv')

@@ -1,3 +1,4 @@
+import dagshub.auth
 import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
@@ -9,21 +10,23 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 from dotenv import load_dotenv
+import dagshub
 
 RANDOM_STATE = 19
 
 load_dotenv()
 
-# Set MLflow Tracking URI
-# mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
-# mlflow.set_experiment("Crop Model")
-
-import dagshub
 dagshub.init(
     repo_owner='ffauzan',
     repo_name='msml-crop',
     mlflow=True
 )
+
+token = os.getenv("DAGSHUB_USER_TOKEN")
+dagshub.auth.add_app_token(token)
+
+mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
+mlflow.set_experiment("Crop Model")
 
 # Load the dataset
 df_cleaned = pd.read_csv('crop_data_cleaned.csv')
@@ -103,8 +106,12 @@ with mlflow.start_run():
     # 5. Log the model with signature
     signature = infer_signature(X_test, y_pred)
     mlflow.sklearn.log_model(best_model, "model", signature=signature)
+    
+    # 6. Save the model locally
+    os.makedirs("artifacts/mlflow_model", exist_ok=True)
+    mlflow.sklearn.save_model(best_model, path="artifacts/mlflow_model")
 
-    # 6. (Optional) Log training/test split data shapes
+    # 7. (Optional) Log training/test split data shapes
     mlflow.log_param("train_samples", X_train.shape[0])
     mlflow.log_param("test_samples", X_test.shape[0])
 

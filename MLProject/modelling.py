@@ -8,12 +8,22 @@ from mlflow.models.signature import infer_signature
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from dotenv import load_dotenv
 
 RANDOM_STATE = 19
 
+load_dotenv()
+
 # Set MLflow Tracking URI
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
-mlflow.set_experiment("Crop Model")
+# mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
+# mlflow.set_experiment("Crop Model")
+
+import dagshub
+dagshub.init(
+    repo_owner='ffauzan',
+    repo_name='msml-crop',
+    mlflow=True
+)
 
 # Load the dataset
 df_cleaned = pd.read_csv('crop_data_cleaned.csv')

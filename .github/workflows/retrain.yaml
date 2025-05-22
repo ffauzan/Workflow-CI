@@ -78,4 +78,4 @@ jobs:
       - name: Build and push multi-arch Docker image
         working-directory: MLProject
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_IMAGE --push .
+          docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_IMAGE --push ./mlflow-dockerfile

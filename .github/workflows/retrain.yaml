@@ -66,12 +66,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build MLflow model Docker image
+      - name: Generate Dockerfile for MLflow model
         working-directory: MLProject
         run: |
-          mlflow models build-docker -m "runs:/$RUN_ID/model" -n msml-crop-mlflow
+          mlflow models build-docker -m "runs:/$RUN_ID/model" -n msml-crop-mlflow --no-build
 
-      - name: Push Docker image to DockerHub
+      - name: Build and push multi-arch Docker image
+        working-directory: MLProject
         run: |
-          docker tag msml-crop-mlflow:latest $DOCKER_IMAGE
-          docker push $DOCKER_IMAGE
+          docker buildx build --platform linux/amd64,linux/arm64 -t $DOCKER_IMAGE --push .

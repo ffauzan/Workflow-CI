@@ -29,6 +29,11 @@ jobs:
         run: |
           pip install pandas xgboost scikit-learn mlflow matplotlib seaborn dotenv dagshub
 
+      - name: Set MLflow Tracking URI
+        run: |
+          echo "MLFLOW_TRACKING_URI=https://dagshub.com/ffauzan/msml-crop.mlflow" >> $GITHUB_ENV
+          echo "MLFLOW_TRACKING_USERNAME=ffauzan" >> $GITHUB_ENV
+          echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.DAGSHUB_USER_TOKEN }}" >> $GITHUB_ENV
       - name: Run training script
         working-directory: MLProject
         run: |

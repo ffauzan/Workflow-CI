@@ -30,12 +30,14 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pandas xgboost scikit-learn matplotlib seaborn dotenv dagshub
-          pip install "mlflow>=2.11.0"
+          pip install "mlflow>=2.3.0"
+
       - name: Set MLflow Tracking URI
         run: |
           echo "MLFLOW_TRACKING_URI=https://dagshub.com/ffauzan/msml-crop.mlflow" >> $GITHUB_ENV
           echo "MLFLOW_TRACKING_USERNAME=ffauzan" >> $GITHUB_ENV
           echo "MLFLOW_TRACKING_PASSWORD=${{ secrets.DAGSHUB_USER_TOKEN }}" >> $GITHUB_ENV
+
       - name: Run training script
         working-directory: MLProject
         run: |
@@ -71,7 +73,7 @@ jobs:
       - name: Generate Dockerfile for MLflow model
         working-directory: MLProject
         run: |
-          mlflow models build-docker -m "runs:/$RUN_ID/model" -n msml-crop-mlflow --no-build
+          mlflow models generate-dockerfile -m "runs:/$RUN_ID/model" -n msml-crop-mlflow
 
       - name: Build and push multi-arch Docker image
         working-directory: MLProject

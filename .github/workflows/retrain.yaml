@@ -34,6 +34,11 @@ jobs:
         run: |
           python modelling.py
 
+      - name: Get run_id
+        working-directory: MLProject
+        run: |
+          echo "RUN_ID=$(cat run_id.txt)" >> $GITHUB_ENV
+
       - name: Archive model artifact
         uses: actions/upload-artifact@v4
         with:
@@ -59,7 +64,7 @@ jobs:
       - name: Build MLflow model Docker image
         working-directory: MLProject
         run: |
-          mlflow models build-docker -m artifacts/mlflow_model -n msml-crop-mlflow
+          mlflow models build-docker -m "runs:/$RUN_ID/model" -n msml-crop-mlflow
 
       - name: Push Docker image to DockerHub
         run: |

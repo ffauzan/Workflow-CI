@@ -1,20 +1,28 @@
-import dagshub.auth
+import os
+import shutil
+from dotenv import load_dotenv
+
 import pandas as pd
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+
 import mlflow
 import mlflow.sklearn
 from mlflow.models.signature import infer_signature
+
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
-from dotenv import load_dotenv
+
 import dagshub
 
 RANDOM_STATE = 19
 
 load_dotenv()
+
+model_path = "artifacts/mlflow_model"
+if os.path.exists(model_path):
+    shutil.rmtree(model_path)
 
 dagshub.init(
     repo_owner='ffauzan',
@@ -65,7 +73,7 @@ grid_search = GridSearchCV(
 )
 
 # Start MLflow run
-with mlflow.start_run():
+with mlflow.start_run() as run:
     # Fit the model
     grid_search.fit(X_train, y_train)
     best_model = grid_search.best_estimator_
@@ -75,17 +83,17 @@ with mlflow.start_run():
     acc = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True)
 
-    # 1. Log best parameters
+    # Log best parameters
     mlflow.log_params(grid_search.best_params_)
 
-    # 2. Log metrics
+    # Log metrics
     mlflow.log_metric("accuracy", acc)
     for label, metrics in report.items():
         if isinstance(metrics, dict):
             for m_name, m_value in metrics.items():
                 mlflow.log_metric(f"{label}_{m_name}", m_value)
 
-    # 3. Log confusion matrix as artifact
+    # Log confusion matrix as artifact
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -97,21 +105,25 @@ with mlflow.start_run():
     plt.savefig("artifacts/confusion_matrix.png")
     mlflow.log_artifact("artifacts/confusion_matrix.png")
 
-    # 4. Log classification report as text
+    # Log classification report as text
     report_text = classification_report(y_test, y_pred)
     with open("artifacts/classification_report.txt", "w", encoding='utf-8') as f:
         f.write(report_text)
     mlflow.log_artifact("artifacts/classification_report.txt")
 
-    # 5. Log the model with signature
+    # Log the model with signature
     signature = infer_signature(X_test, y_pred)
     mlflow.sklearn.log_model(best_model, "model", signature=signature)
     
-    # 6. Save the model locally
+    # Save the model locally
     os.makedirs("artifacts/mlflow_model", exist_ok=True)
     mlflow.sklearn.save_model(best_model, path="artifacts/mlflow_model")
+    
+    # Save run ID
+    with open("run_id.txt", "w", encoding='utf8') as f:
+        f.write(run.info.run_id)
 
-    # 7. (Optional) Log training/test split data shapes
+    # Log training/test split data shapes
     mlflow.log_param("train_samples", X_train.shape[0])
     mlflow.log_param("test_samples", X_test.shape[0])
 

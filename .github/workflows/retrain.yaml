@@ -73,7 +73,7 @@ jobs:
       - name: Generate Dockerfile for MLflow model
         working-directory: MLProject
         run: |
-          mlflow models generate-dockerfile -m "runs:/$RUN_ID/model" -n msml-crop-mlflow
+          mlflow models generate-dockerfile -m "runs:/$RUN_ID/model"
 
       - name: Build and push multi-arch Docker image
         working-directory: MLProject

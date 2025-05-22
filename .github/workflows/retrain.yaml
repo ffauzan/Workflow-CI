@@ -5,6 +5,7 @@ on:
     paths:
       - 'MLProject/modelling.py'
       - 'MLProject/crop_data_cleaned.csv'
+      - '.github/workflows/retrain.yaml'
   workflow_dispatch:
 
 env:
@@ -23,12 +24,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
-          pip install pandas xgboost scikit-learn mlflow matplotlib seaborn dotenv dagshub
-
+          pip install --upgrade pip
+          pip install pandas xgboost scikit-learn matplotlib seaborn dotenv dagshub
+          pip install "mlflow>=2.11.0"
       - name: Set MLflow Tracking URI
         run: |
           echo "MLFLOW_TRACKING_URI=https://dagshub.com/ffauzan/msml-crop.mlflow" >> $GITHUB_ENV

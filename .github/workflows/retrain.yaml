@@ -53,11 +53,12 @@ jobs:
         with:
           name: mlflow_model
           path: MLProject/artifacts/mlflow_model
-
+      - name: Set Short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: 'v1.0.0'
+          tag_name: ml_model_${{ env.SHORT_SHA }}
           name: 'ML Model Release'
           files: MLProject/artifacts/mlflow_model/**
 

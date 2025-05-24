@@ -3,7 +3,7 @@ name: Train and Release ML Model
 on:
   push:
     paths:
-      - 'MLProject/modelling.py'
+      - 'MLProject/modelling_tuning.py'
       - 'MLProject/crop_data_cleaned.csv'
       - '.github/workflows/retrain.yaml'
   workflow_dispatch:

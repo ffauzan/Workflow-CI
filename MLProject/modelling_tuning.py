@@ -20,6 +20,8 @@ RANDOM_STATE = 19
 
 load_dotenv()
 
+mlflow.set_tracking_uri("file:./mlruns") 
+
 model_path = "artifacts/mlflow_model"
 if os.path.exists(model_path):
     shutil.rmtree(model_path)
@@ -34,9 +36,9 @@ token = os.getenv("DAGSHUB_USER_TOKEN")
 dagshub.auth.add_app_token(token)
 
 mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+# mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 
-mlflow.set_experiment("Crop Model v2")
+mlflow.set_experiment("CropModel")
 
 
 # Load the dataset
@@ -70,13 +72,14 @@ grid_search = GridSearchCV(
     estimator=model,
     param_grid=param_grid,
     scoring='accuracy',
-    n_jobs=-1,
+    n_jobs=1,
     cv=cv,
     verbose=1
 )
 
 # Start MLflow run
 with mlflow.start_run() as run:
+    print(f"Active run ID: {run.info.run_id}")
     # Fit the model
     grid_search.fit(X_train, y_train)
     best_model = grid_search.best_estimator_
@@ -134,4 +137,7 @@ with mlflow.start_run() as run:
     print("Best Parameters:", grid_search.best_params_)
     print("Test Accuracy:", acc)
     print("Classification Report:\n", report_text)
+    
+    if run and run._active:
+        mlflow.end_run()
 

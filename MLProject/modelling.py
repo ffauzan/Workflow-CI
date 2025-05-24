@@ -120,7 +120,3 @@ with mlflow.start_run() as run:
     # Print results
     print("Test Accuracy:", acc)
     print("Classification Report:\n", report_text)
-    
-    if run and run._active:
-        mlflow.end_run()
-

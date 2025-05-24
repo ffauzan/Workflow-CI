@@ -20,8 +20,6 @@ RANDOM_STATE = 19
 
 load_dotenv()
 
-mlflow.set_tracking_uri("file:./mlruns") 
-
 model_path = "artifacts/mlflow_model"
 if os.path.exists(model_path):
     shutil.rmtree(model_path)
@@ -32,12 +30,14 @@ dagshub.init(
     mlflow=True
 )
 
-token = os.getenv("DAGSHUB_USER_TOKEN")
-dagshub.auth.add_app_token(token)
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+if MLFLOW_TRACKING_URI and MLFLOW_TRACKING_URI.startswith("https://dagshub.com"):
+    token = os.getenv("DAGSHUB_USER_TOKEN")
+    dagshub.auth.add_app_token(token)
+else:
+    MLFLOW_TRACKING_URI = "file:./mlruns"
 
-mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
-# mlflow.set_tracking_uri("http://127.0.0.1:5000/")
-
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("CropModel")
 
 
@@ -72,10 +72,14 @@ grid_search = GridSearchCV(
     estimator=model,
     param_grid=param_grid,
     scoring='accuracy',
-    n_jobs=1,
+    n_jobs=-1,
     cv=cv,
     verbose=1
 )
+
+# Remove stale MLflow run context if it exists
+if "MLFLOW_RUN_ID" in os.environ:
+    del os.environ["MLFLOW_RUN_ID"]
 
 # Start MLflow run
 with mlflow.start_run() as run:

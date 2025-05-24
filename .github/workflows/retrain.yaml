@@ -41,7 +41,7 @@ jobs:
       - name: Run training script
         working-directory: MLProject
         run: |
-          python modelling.py
+          mlflow run . --env-manager=local
 
       - name: Get run_id
         working-directory: MLProject

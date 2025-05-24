@@ -30,13 +30,17 @@ dagshub.init(
     mlflow=True
 )
 
-token = os.getenv("DAGSHUB_USER_TOKEN")
-dagshub.auth.add_app_token(token)
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+if MLFLOW_TRACKING_URI and MLFLOW_TRACKING_URI.startswith("https://dagshub.com"):
+    token = os.getenv("MLFLOW_TRACKING_PASSWORD")
+    dagshub.auth.add_app_token(token)
+else:
+    MLFLOW_TRACKING_URI = "file:./mlruns"
 
-mlflow.set_tracking_uri("https://dagshub.com/ffauzan/msml-crop.mlflow/")
-mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+print(f"MLFLOW_TRACKING_URI: {MLFLOW_TRACKING_URI}")
 
-mlflow.set_experiment("Crop Model v2")
+mlflow.set_experiment("CropModel")
 
 
 # Load the dataset
@@ -57,37 +61,20 @@ model = XGBClassifier(
     random_state=RANDOM_STATE
 )
 
-# Grid search parameters
-param_grid = {
-    'max_depth': [5, 7],
-    'learning_rate': [0.1, 0.2],
-    'n_estimators': [100, 150],
-    'subsample': [0.8, 0.9]
-}
-
-cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
-grid_search = GridSearchCV(
-    estimator=model,
-    param_grid=param_grid,
-    scoring='accuracy',
-    n_jobs=-1,
-    cv=cv,
-    verbose=1
-)
+# Remove stale MLflow run context if it exists
+if "MLFLOW_RUN_ID" in os.environ:
+    del os.environ["MLFLOW_RUN_ID"]
 
 # Start MLflow run
 with mlflow.start_run() as run:
+    print(f"Active run ID: {run.info.run_id}")
     # Fit the model
-    grid_search.fit(X_train, y_train)
-    best_model = grid_search.best_estimator_
+    model.fit(X_train, y_train)
 
     # Predict and evaluate
-    y_pred = best_model.predict(X_test)
+    y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True)
-
-    # Log best parameters
-    mlflow.log_params(grid_search.best_params_)
 
     # Log metrics
     mlflow.log_metric("accuracy", acc)
@@ -116,11 +103,11 @@ with mlflow.start_run() as run:
 
     # Log the model with signature
     signature = infer_signature(X_test, y_pred)
-    mlflow.sklearn.log_model(best_model, "model", signature=signature)
+    mlflow.sklearn.log_model(model, "model", signature=signature)
     
     # Save the model locally
     os.makedirs("artifacts/mlflow_model", exist_ok=True)
-    mlflow.sklearn.save_model(best_model, path="artifacts/mlflow_model")
+    mlflow.sklearn.save_model(model, path="artifacts/mlflow_model")
     
     # Save run ID
     with open("run_id.txt", "w", encoding='utf8') as f:
@@ -131,7 +118,9 @@ with mlflow.start_run() as run:
     mlflow.log_param("test_samples", X_test.shape[0])
 
     # Print results
-    print("Best Parameters:", grid_search.best_params_)
     print("Test Accuracy:", acc)
     print("Classification Report:\n", report_text)
+    
+    if run and run._active:
+        mlflow.end_run()
 

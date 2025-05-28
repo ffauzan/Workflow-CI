@@ -40,7 +40,7 @@ else:
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 print(f"MLFLOW_TRACKING_URI: {MLFLOW_TRACKING_URI}")
 
-mlflow.set_experiment("CropModel")
+mlflow.set_experiment("CropModelv2Basic")
 
 
 # Load the dataset
@@ -77,33 +77,7 @@ with mlflow.start_run() as run:
     report = classification_report(y_test, y_pred, output_dict=True)
 
     # Log metrics
-    mlflow.log_metric("accuracy", acc)
-    for label, metrics in report.items():
-        if isinstance(metrics, dict):
-            for m_name, m_value in metrics.items():
-                mlflow.log_metric(f"{label}_{m_name}", m_value)
-
-    # Log confusion matrix as artifact
-    cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title("Confusion Matrix")
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.tight_layout()
-    os.makedirs("artifacts", exist_ok=True)
-    plt.savefig("artifacts/confusion_matrix.png")
-    mlflow.log_artifact("artifacts/confusion_matrix.png")
-
-    # Log classification report as text
-    report_text = classification_report(y_test, y_pred)
-    with open("artifacts/classification_report.txt", "w", encoding='utf-8') as f:
-        f.write(report_text)
-    mlflow.log_artifact("artifacts/classification_report.txt")
-
-    # Log the model with signature
-    signature = infer_signature(X_test, y_pred)
-    mlflow.sklearn.log_model(model, "model", signature=signature)
+    mlflow.autolog()
     
     # Save the model locally
     os.makedirs("artifacts/mlflow_model", exist_ok=True)
@@ -119,4 +93,3 @@ with mlflow.start_run() as run:
 
     # Print results
     print("Test Accuracy:", acc)
-    print("Classification Report:\n", report_text)

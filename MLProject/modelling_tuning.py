@@ -38,7 +38,7 @@ else:
     MLFLOW_TRACKING_URI = "file:./mlruns"
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-mlflow.set_experiment("CropModel")
+mlflow.set_experiment("CropModelV2Tuning")
 
 
 # Load the dataset

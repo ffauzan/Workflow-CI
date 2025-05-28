@@ -65,6 +65,10 @@ model = XGBClassifier(
 if "MLFLOW_RUN_ID" in os.environ:
     del os.environ["MLFLOW_RUN_ID"]
 
+
+# Log metrics
+mlflow.autolog()
+    
 # Start MLflow run
 with mlflow.start_run() as run:
     print(f"Active run ID: {run.info.run_id}")
@@ -75,9 +79,6 @@ with mlflow.start_run() as run:
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True)
-
-    # Log metrics
-    mlflow.autolog()
     
     # Save the model locally
     os.makedirs("artifacts/mlflow_model", exist_ok=True)

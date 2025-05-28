@@ -120,6 +120,24 @@ with mlflow.start_run() as run:
     with open("artifacts/classification_report.txt", "w", encoding='utf-8') as f:
         f.write(report_text)
     mlflow.log_artifact("artifacts/classification_report.txt")
+    
+    # Log feature importances as json dictionary
+    feature_importances = best_model.get_booster().get_score(importance_type='weight')
+    feature_importances = {k: v for k, v in sorted(feature_importances.items(), key=lambda item: item[1], reverse=True)}
+    with open("artifacts/feature_importances.json", "w", encoding='utf-8') as f:
+        f.write(str(feature_importances))
+    mlflow.log_artifact("artifacts/feature_importances.json")
+    
+    # Log feature importances as plot
+    plt.figure(figsize=(10, 8))
+    sns.barplot(x=list(feature_importances.values()), y=list(feature_importances.keys()))
+    plt.title("Feature Importances")
+    plt.xlabel("Importance")
+    plt.ylabel("Features")
+    plt.tight_layout()
+    plt.savefig("artifacts/feature_importances.png")
+    mlflow.log_artifact("artifacts/feature_importances.png")
+    
 
     # Log the model with signature
     signature = infer_signature(X_test, y_pred)
